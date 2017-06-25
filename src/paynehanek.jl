@@ -86,10 +86,8 @@ function paynehanek(x::Float64)
     z_hi,z_lo = fromfraction(f)
 
     # 6. multiply by π/2
-#    pio2_hi = 1.5707963407039642
-#    pio2_lo = -1.3909067614167116e-8
-     pio2_hi  = 1.5707963267948966     # convert(Float64, pi * BigFloat(1/2))
-     pio2_lo  = 6.123233995736766e-17  # convert(Float64, pi * BigFloat(1/2) - pi1o2_h)
+    pio2_hi = 1.5707963407039642
+    pio2_lo = -1.3909067614167116e-8
 
     y_hi = (z_hi+z_lo)*(pio2_hi+pio2_lo)
     y_lo = (((z_hi*pio2_hi - y_hi) + z_hi*pio2_lo) + z_lo*pio2_hi) + z_lo*pio2_lo
