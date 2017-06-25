@@ -14,16 +14,17 @@ out2 = Base.Math.ieee754_rem_pio2(x)
 @test out1[2].lo == out2[2][2]
 
 using BenchmarkTools
+nx = 10000
 intervals = []
 # Testing some important intervals and values around bad cases that need higher precision
 for i = 1:9
-    push!(intervals, linspace(-pi*i/4, -pi*(i-1)/4, 100000))
-    push!(intervals, linspace(pi*(i-1)/4, pi*i/4, 100000))
+    push!(intervals, linspace(-pi*i/4, -pi*(i-1)/4, nx))
+    push!(intervals, linspace(pi*(i-1)/4, pi*i/4, nx))
 end
 
-#push!(intervals, linspace(-2.0^20, -pi*7/4, 100000))
-#push!(intervals, linspace(pi*7/4, 2.0^20, 100000))
-#push!(intervals, linspace(2.0^20, 2.0^60, 100000))
+#push!(intervals, linspace(-2.0^20, -pi*7/4, nx))
+#push!(intervals, linspace(pi*7/4, 2.0^20, nx))
+#push!(intervals, linspace(2.0^20, 2.0^60, nx))
 #intervals = [intervals[end]]
 time_my_rem = []
 time_rem = []
@@ -63,14 +64,14 @@ end
 
 
 intervals = []
-push!(intervals, linspace(-2.0^5, -pi*9/4, 100000))
-push!(intervals, linspace(pi*9/4, 2.0^5, 100000))
-push!(intervals, linspace(2.0^5, 2.0^10, 100000))
-push!(intervals, linspace(-2.0^10, -2.0^5, 100000))
-push!(intervals, linspace(2.0^10, 2.0^15, 100000))
-push!(intervals, linspace(-2.0^15, -2.0^10, 100000))
-push!(intervals, linspace(2.0^20, 2.0^15, 100000))
-push!(intervals, linspace(-2.0^15, -2.0^20, 100000))
+push!(intervals, linspace(-2.0^5, -pi*9/4, nx))
+push!(intervals, linspace(pi*9/4, 2.0^5, nx))
+push!(intervals, linspace(2.0^5, 2.0^10, nx))
+push!(intervals, linspace(-2.0^10, -2.0^5, nx))
+push!(intervals, linspace(2.0^10, 2.0^15, nx))
+push!(intervals, linspace(-2.0^15, -2.0^10, nx))
+push!(intervals, linspace(2.0^20, 2.0^15, nx))
+push!(intervals, linspace(-2.0^15, -2.0^20, nx))
 
 println("Testing values in [-22.0^20, -pi*9/4] and [pi*9/4, 2.0^20]")
 for (i, inter) in enumerate(intervals)
@@ -90,11 +91,33 @@ end
 
 intervals = []
 for i = 1:10
-    push!(intervals, linspace(2.0^(20+(i-1)*5), 2.0^(20+i*5), 100000))
-    push!(intervals, linspace(-2.0^(20+(i-1)*5), -2.0^(20+i*5), 100000))
+    push!(intervals, linspace(2.0^(20+(i-1)*5), 2.0^(20+i*5), nx))
+    push!(intervals, linspace(-2.0^(20+(i-1)*5), -2.0^(20+i*5), nx))
 end
 
 println("Testing values in [-2.0^70, -pi*9/4] and [pi*9/4, 2.0^70]")
+for (i, inter) in enumerate(intervals)
+    x = collect(inter)
+    push!(time_my_rem, @belapsed RemPiO2.rem_pio2_kernel.($x))
+    push!(time_rem, @belapsed Base.Math.ieee754_rem_pio2.($x))
+    for _x in x
+        out1 = RemPiO2.rem_pio2_kernel(_x)
+        out2 = Base.Math.ieee754_rem_pio2(_x)
+#        @test out1[1] == out2[1]
+#        @test out1[2].hi == out2[2][1]
+#        @test out1[2].lo == out2[2][2]
+        @test out1[2].hi+out1[2].lo == sum(out2[2])
+    end
+    @printf "%3.0d         %.5f    %.5f    %.5f\n" i time_my_rem[i] time_rem[i] time_my_rem[i]/time_rem[i]
+end
+
+intervals = []
+for i = 1:2
+    push!(intervals, linspace(2.0^(1023-(i-1)*5), 2.0^(1023-i*5), nx))
+    push!(intervals, linspace(-2.0^(1023-(i-1)*5), -2.0^(1023-i*5), nx))
+end
+
+println("Testing values in [-2.0^1023, -2.0^(1023-10)] and [2.0^(1023-10), 2.0^1023]")
 for (i, inter) in enumerate(intervals)
     x = collect(inter)
     push!(time_my_rem, @belapsed RemPiO2.rem_pio2_kernel.($x))
